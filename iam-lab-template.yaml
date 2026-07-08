@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  IAM automation lab: one-time password secret, S3 and EC2 permission
+  groups, and three console-access IAM users with forced password reset.
+
+Resources:
+
+  OneTimePasswordSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: iam-lab-temp-password
+      Description: Temporary console password shared by initial IAM users
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: password
+        PasswordLength: 16
+        ExcludePunctuation: true
+
+  S3ReadOnlyGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: S3-ListBuckets-Group
+      Policies:
+        - PolicyName: S3ListBucketsOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowListS3Buckets
+                Effect: Allow
+                Action:
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
+                Resource: '*'
+
+  EC2ManageGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: EC2-Manage-Group
+      Policies:
+        - PolicyName: EC2ListAndCreate
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowListEC2
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                Resource: '*'
+              - Sid: AllowCreateEC2
+                Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                Resource: '*'
+
+  EC2User1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: ec2-user1
+      Groups:
+        - !Ref EC2ManageGroup
+      LoginProfile:
+        Password: !Sub '{{resolve:secretsmanager:${OneTimePasswordSecret}:SecretString:password}}'
+        PasswordResetRequired: true
+
+  EC2User2:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: ec2-user2
+      Groups:
+        - !Ref EC2ManageGroup
+      LoginProfile:
+        Password: !Sub '{{resolve:secretsmanager:${OneTimePasswordSecret}:SecretString:password}}'
+        PasswordResetRequired: true
+      Policies:
+        - PolicyName: DenyEC2Launch
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DenyRunInstances
+                Effect: Deny
+                Action:
+                  - ec2:RunInstances
+                Resource: '*'
+
+  S3User:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: s3-user
+      Groups:
+        - !Ref S3ReadOnlyGroup
+      LoginProfile:
+        Password: !Sub '{{resolve:secretsmanager:${OneTimePasswordSecret}:SecretString:password}}'
+        PasswordResetRequired: true
+
+Outputs:
+  ConsoleSignInURL:
+    Description: Console sign-in URL for these IAM users
+    Value: !Sub 'https://${AWS::AccountId}.signin.aws.amazon.com/console'
+  SecretArn:
+    Description: ARN of the Secrets Manager secret holding the one-time password
+    Value: !Ref OneTimePasswordSecret
