@@ -71,7 +71,7 @@ Resources:
                   - s3:GetBucketLocation
                 Resource: '*'
 
-EC2ManageGroup:
+  EC2ManageGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: !Ref Ec2GroupName
