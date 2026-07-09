@@ -4,7 +4,7 @@ Description: >
   groups, and three console-access IAM users with forced password reset.
 
 Parameters:
-
+# v2.1
   Ec2User1Name:
     Type: String
     Default: ec2-user1
