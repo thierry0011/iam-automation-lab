@@ -71,7 +71,7 @@ Resources:
                   - s3:GetBucketLocation
                 Resource: '*'
 
-  EC2ManageGroup:
+EC2ManageGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: !Ref Ec2GroupName
@@ -85,11 +85,25 @@ Resources:
                 Action:
                   - ec2:DescribeInstances
                   - ec2:DescribeInstanceStatus
+                  - ec2:DescribeImages
+                  - ec2:DescribeInstanceTypes
+                  - ec2:DescribeKeyPairs
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeTags
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribeAccountAttributes
+                  - ec2:DescribeLaunchTemplates
+                  - ec2:DescribeLaunchTemplateVersions
                 Resource: '*'
               - Sid: AllowCreateEC2
                 Effect: Allow
                 Action:
                   - ec2:RunInstances
+                  - ec2:CreateTags
                 Resource: '*'
 
   EC2User1:
